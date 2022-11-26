@@ -64,8 +64,27 @@ void debug(char *message)
 // APESAR DO CÓDIGO ESTAR EM UMA ÚNICA FUNÇÃO, É SEU OBJETIVO ESCREVER A LÓGICA
 // DE FORMA ORGANIZADA, USANDO DIFERENTES FUNÇÕES E ARQUIVOS.
 
+struct carta {
+
+  char valor;
+  char naipe[99];
+
+};
+
+struct player {
+
+  char id[99];
+
+};
+
 int main()
-{
+{ 
+  struct player jogadores[99];
+  int njogadores = 0;
+  int vez;
+  struct carta mao[99];
+  struct carta mesa;
+  int i = 0;
   // Obs: As variáveis deste template foram definidas apenas para o código compilar e rodar.
   // Então, cabe a você usar as variáveis adequadas em função do que está lendo.
   char temp[MAX_LINE];     // string para leitura temporária de dados
@@ -97,23 +116,40 @@ int main()
   // Lê uma linha até o '\n' com os identificadores dos jogadores.
   // Será necessário separar os identificadores para saber quem são, quantos bots estão
   // jogando e qual a ordem inicial de jogada deles.
-  scanf("PLAYERS %[^\n]\n", temp);
+  scanf("PLAYERS %s", temp);
+  do {
+    *jogadores[i].id = temp;
+    i++;
+    njogadores++;
+    scanf("%s", temp);
+  } while (temp != "\n");
+
 
   // Caso queira imprimir uma mensagem para debugar, pode chamar 'debug()' passando uma string.
   // Por exemplo: debug(temp);
   debug(temp);
 
   // Lê o identificador do próprio bot. Isso é importante para testar quando é sua vez.
-  scanf("YOU %s\n", my_id);
+  scanf("YOU %s", my_id);
 
+  for(i=0;jogadores[i].id!="\n";i++){
+    if (my_id == jogadores[i].id){
+      vez = i;
+      break;
+    }
+  }
   // Lê as cartas iniciais que o bot tem na mão. Ex: "[ 4♥ 7♦ 2♣ J♠ A♥ 3♦ 2♣ 9♠ ]".
   // Os caracteres especiais (♥, ♦, ♣ e ♠) são caracteres ascii estendidos e precisam de
   // mais de um byte para armazená-los. Assim, é interesante guardá-los como strings.
   // Obs: lembre-se de tratar os colchetes.
-  scanf("HAND %[^\n]\n", temp);
+  i = 0;
+  scanf("HAND [ %c%s", mao[i].valor, mao[i].naipe);
+  for (i = 1; i<=7;i++){
+    scanf("%c%s", mao[i].valor, mao[i].naipe);
+  }
 
   // Lê a carta aberta sobre a mesa. Ex: TABLE 8♣
-  scanf("TABLE %s\n", temp);
+  scanf("TABLE %c%s\n", mesa.valor, mesa.naipe);
 
   // === PARTIDA ===
 
