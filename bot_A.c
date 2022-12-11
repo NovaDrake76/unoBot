@@ -64,30 +64,25 @@ void debug(char *message)
 // APESAR DO CÓDIGO ESTAR EM UMA ÚNICA FUNÇÃO, É SEU OBJETIVO ESCREVER A LÓGICA
 // DE FORMA ORGANIZADA, USANDO DIFERENTES FUNÇÕES E ARQUIVOS.
 
-struct carta {
+typedef struct Carta {
 
   char valor;
-  char naipe[99];
+  char naipe[MAX_LINE];
 
-};
-
-struct player {
-
-  char id[99];
-
-};
+}carta;
 
 int main()
 { 
-  struct player jogadores[99];
   int njogadores = 0;
   int vez;
-  struct carta mao[99];
-  struct carta mesa;
+  int ncartas = 0;
+  carta mao[99];
+  carta mesa;
   int i = 0;
   // Obs: As variáveis deste template foram definidas apenas para o código compilar e rodar.
   // Então, cabe a você usar as variáveis adequadas em função do que está lendo.
-  char temp[MAX_LINE];     // string para leitura temporária de dados
+  char temp[MAX_LINE];
+  char tempois;     // string para leitura temporária de dados
   char my_id[MAX_ID_SIZE]; // identificador do seu bot
 
   setbuf(stdin, NULL);  // stdin, stdout e stderr não terão buffers
@@ -118,9 +113,6 @@ int main()
   // jogando e qual a ordem inicial de jogada deles.
   scanf("PLAYERS %s", temp);
   do {
-    *jogadores[i].id = temp;
-    i++;
-    njogadores++;
     scanf("%s", temp);
   } while (temp != "\n");
 
@@ -132,22 +124,24 @@ int main()
   // Lê o identificador do próprio bot. Isso é importante para testar quando é sua vez.
   scanf("YOU %s", my_id);
 
-  for(i=0;jogadores[i].id!="\n";i++){
-    if (my_id == jogadores[i].id){
-      vez = i;
-      break;
-    }
-  }
+
   // Lê as cartas iniciais que o bot tem na mão. Ex: "[ 4♥ 7♦ 2♣ J♠ A♥ 3♦ 2♣ 9♠ ]".
   // Os caracteres especiais (♥, ♦, ♣ e ♠) são caracteres ascii estendidos e precisam de
   // mais de um byte para armazená-los. Assim, é interesante guardá-los como strings.
   // Obs: lembre-se de tratar os colchetes.
-  i = 0;
-  scanf("HAND [ %c%s", mao[i].valor, mao[i].naipe);
-  for (i = 1; i<=7;i++){
-    scanf("%c%s", mao[i].valor, mao[i].naipe);
+  scanf("HAND [ %c%s", mao[ncartas].valor, mao[ncartas].naipe);
+  ncartas++;
+  while(1){
+    scanf("%c", tempois);
+    if(tempois == ']'){
+      break;
+    }
+    else{
+      mao[ncartas].valor = tempois;
+      scanf("%s", mao[ncartas].naipe);
+      ncartas++;
+    }
   }
-
   // Lê a carta aberta sobre a mesa. Ex: TABLE 8♣
   scanf("TABLE %c%s\n", mesa.valor, mesa.naipe);
 
@@ -156,6 +150,11 @@ int main()
   char id[MAX_ID_SIZE];
   char action[MAX_ACTION];
   char complement[MAX_LINE];
+  char prior[MAX_LINE];
+  int qnt = 0;
+  carta comp;
+  int boy = 0;
+  int dado = 0;
 
   /*
   O `while(1) faz o bot entra num laço infinito, mas não se preocupe. O simulador do jogo irá
@@ -194,8 +193,26 @@ int main()
       bot (pode ser o seu) deverá ser obrigatoriamente "BUY 2", sob pena do bot ser
       eliminado da partida.
       */
+     strcpy(complement, "");
+     boy = 0;
+      
+      scanf("%s", action);
+      if(strcmp(action, "DISCARD") == NULL){
+        scanf("%c%s", mesa.valor, mesa.naipe);
+        if(mesa.valor == 'V'){
+          boy = 2;
+        }
+        else if(mesa.valor == 'C'){
+          boy = 4;
+        }
+        else if(mesa.valor == 'A'){
+          scanf("%s", mesa.naipe);
+        }
+      }
+      else{
+        scanf("%s", complement);
+      }
 
-      scanf("%s %s", action, complement);
       // obs: um segundo scanf pode ser realizado par ler o 2º complemento.
 
       /*
@@ -302,8 +319,60 @@ int main()
 
     // Nesse exemplo de ação, o bot tenta descartar a carta 4♥.
     // Se ele não tiver na mão, a ação é simplesmente ignorada.
-    char card[] = "A♥ ♥";
-    printf("DISCARD %s\n", card);
+    dado = 0;
+    if(boy > 0){
+      printf("BUY %d\n", boy);
+      for (i=0;i<boy;i++){
+        scanf("%c%s", mao[ncartas].valor, mao[ncartas].naipe);
+        ncartas++;
+      }
+      boy = 0;
+    }
+    else{
+      for (i=0;i<ncartas;i++){
+        if (mao[i].valor == 'V'|| mao[i].valor == 'C' || mao[i].valor == 'R' || mao[i].valor == 'A'){
+          if (mao[i].valor == mesa.valor || strcmp(mao[i].naipe, mesa.naipe) == NULL){
+            if (mao[i].valor == 'A'){
+              printf("DISCARD %c%s %c\n", mao[i].valor, mao[i].naipe, mao[i].naipe);
+            }
+            else{
+              printf("DISCARD %c%s\n", mao[i].valor, mao[i].naipe);
+            }
+            ncartas--;
+            mao[i].valor = mao[ncartas].valor;
+            *mao[i].naipe = mao[ncartas].naipe;
+            dado = 1;
+          }
+        }
+      }
+      if (dado == 0){
+        for (i=0;i<ncartas;i++){
+          if(mao[i].valor == mesa.valor){
+            printf("DISCARD %c%s\n", mao[i].valor, mao[i].naipe);
+            ncartas--;
+            mao[i].valor = mao[ncartas].valor;
+            *mao[i].naipe = mao[ncartas].naipe;
+            dado = 1;
+          }
+        }
+        if (dado == 0){
+          for (i=0;i<ncartas;i++){
+            if(strcmp(mao[i].naipe, mesa.naipe) == NULL){
+              printf("DISCARD %c%s\n", mao[i].valor, mao[i].naipe);
+              ncartas--;
+              mao[i].valor = mao[ncartas].valor;
+              *mao[i].naipe = mao[ncartas].naipe;
+              dado = 1;
+            }
+          }
+        }
+      }
+      if (dado == 0){
+        printf("BUY 1\n");
+        scanf("%c%s", mao[ncartas].valor, mao[ncartas].naipe);
+        ncartas++;
+      }
+    }
   }
 
   return 0;
