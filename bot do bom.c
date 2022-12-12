@@ -199,9 +199,11 @@ int main() {
       */
 
       strcpy(complement, "");
-      boy = 0;
 
       scanf("%s ", action);
+      if (strcmp(action, "TURN") != 0){
+         boy = 0;
+      }
       if (strcmp(action, "DISCARD") == 0)
       {
         scanf("%c%s", &mesa.valor, mesa.naipe);
@@ -306,7 +308,7 @@ int main() {
       SAY Droga!
       BUY 2
       BUY 4
-      BUY 1
+      BUY 1 
 
     OBS: Todas as mensagens enviadas **DEVEM terminar com salto de linha ('\n')**, caso
          contrário, o simulador não saberá quando uma ação termina e quebrar o sincronização
